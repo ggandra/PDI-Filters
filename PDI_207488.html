@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+<html lang="pt-br" xmlns="http://www.w3.org/1999/xhtml" dir="ltr">
+  <head>
+    <title>Trabalho PDI</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <div id="div_geral">
+    <form class="col s6">
+        <input id="btn_image" type="file" style="visibility: hidden;" class="btn_image"></input>
+        <div class="input-fields col s6">
+            <p>Inserir valor caso seu filtro necessite de um</p>
+            <input id="value_bin" type="text" class="validate">
+        </div>
+        <div class="input-box">
+            <p>Inserir uma Máscara</p>
+            <div class="input-field inline">
+                <input class="input-field inline" id="in1" type="text">
+                <input class="input-field inline" id="in2" type="text">
+                <input class="input-field inline" id="in3" type="text">
+            </div>
+            <div class="input-field inline">
+                <input class="input-field inline" id="in4" type="text">
+                <input class="input-field inline" id="in5" type="text">
+                <input class="input-field inline" id="in6" type="text">
+            </div>
+            <div class="input-field inline">
+                <input class="input-field inline" id="in7" type="text">
+                <input class="input-field inline" id="in8" type="text">
+                <input class="input-field inline" id="in9" type="text">
+            </div>
+        </div>
+    </form>
+    <div>
+        <button class="waves-effect waves-light btn-small" id="PaintButton">Imprimir Imagem Original</button>
+        <button class="waves-effect waves-light btn-small" id="btn_binar" onclick="filtroMedia()" class="btn_binar">Aplicar Filtro de Média</button>
+        <button class="waves-effect waves-light btn-small" id="btn_quantizacao" onclick="quantizacao()" class="btn_binar">Aplicar Quantização</button>
+        <button class="waves-effect waves-light btn-small" id="btn_tomDeCinza" onclick="tomDeCinza()" class="btn_binar">Filtro tons de cinza</button>
+    </div>
+    <div>
+        <button class="waves-effect waves-light btn-small" id="btn_quantizacao" onclick="negativa()" class="btn_binar">Negativa</button>
+        <button class="waves-effect waves-light btn-small" id="btn_quantizacao" onclick="binarizacao()" class="btn_binar">Binarização</button>
+        <button class="waves-effect waves-light btn-small" id="btn_quantizacao" onclick="mediana()" class="btn_binar">Mediana 3x3</button>
+        <button class="waves-effect waves-light btn-small" id="btn_quantizacao" onclick="laPlaciano()" class="btn_binar">LaPlaciano</button>
+    </div>
+    <div class="secundaria">
+        <strong class="p_pixel">Total de Pixels: </strong>
+        <strong id="total_pixel" class="txt_pixel">Quantidade de pixels</strong>
+
+        <strong class="p_pixel">Altura: </strong>
+        <strong id="txt_altura" class="txt_altura">Altura da imagem</strong>
+
+        <strong class="p_pixel">Largura: </strong>
+        <strong id="txt_largura" class="txt_largura">Largura da imagem</strong>
+
+    </div>
+    <div class="secundaria2">
+        <strong class="p_pixel">Tempo de execução: </strong>
+        <strong id="exec_time" class="txt_largura"></strong>
+    </div>
+    <div class="div_images">
+        <img id="obj_image1" src="920f37f0-7e6c-4b14-aac9-ffc985169243.png" class="obj_image1"></img>
+        <canvas id="Canvas"></canvas>
+    </div>
+    </div>
+  </body>
+</html>
+<style>
+    .principal {
+        margin-left: 40px;
+        margin-top: 20px;
+    }
+    .secundaria {
+        margin-left: 890px;
+        margin-top: -85px;
+        position: absolute;
+    }
+    .secundaria2 {
+        margin-left: 890px;
+        margin-top: -65px;
+        position: absolute;
+    }
+    .div_images {
+        margin-left: 10px;
+        margin-top: 30px;
+        flex-direction: column;
+        position: absolute;
+        width: 800;
+        height: 1600;
+    }
+    .waves-effect {
+        background-color: #880e4f;
+        margin-left: 10px;
+        margin-top: 20px;
+    }
+    .validate {
+        color: #880e4f;
+        text-decoration-color: #880e4f;
+        -webkit-border-before-color: #880e4f;
+        border-color: #880e4f;
+        height: 200;
+        width: 200;
+    }
+    .input-field {
+        margin-left: 40px;
+        width: 40px;
+        text-align: center;
+    }
+    .p_pixel {
+        color: #880e4f;
+    }
+    .input-fields {
+        position: absolute;
+        margin-left: 400px;
+        width: 400px;
+    } 
+    .input-box {
+        margin-left: 15px;
+    }
+</style>
+<script>
+
+var paintButton;
+var canvas;
+var context;
+input = document.getElementById('btn_image')
+
+input.onchange = function(e) { 
+    let val = $("#btn_image").val();
+    let subs = val.substr(12, val.length)
+    document.getElementById('obj_image1').src = './'+subs;
+    console.log(subs)
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    init();
+};
+
+function init() {
+    paintButton = document.getElementById('PaintButton');
+    canvas = document.getElementById('Canvas');
+    context = canvas.getContext('2d');
+    var image = document.getElementById('obj_image1');
+    
+    canvas.width = image.width;
+    canvas.height = image.height;
+    $('#txt_largura').text(canvas.width);
+    $('#txt_altura').text(canvas.height);
+    $('#total_pixel').text(canvas.height*canvas.width);
+    drawImage(image);
+    paintButton.addEventListener('click', function () {
+        drawImage(image);
+    });
+}
+
+function drawImage(image) {
+  context.drawImage(image, 0, 0);
+}
+
+function negativa() {
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    filtroNegativa(imageData.data);
+    context.putImageData(imageData, 0, 0);
+}
+
+function filtroMedia() {
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    media(imageData.data);
+    context.putImageData(imageData, 0, 0);
+}
+
+function quantizacao() {
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    quantizar(imageData.data);
+    context.putImageData(imageData, 0, 0);
+}
+
+function tomDeCinza() {
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    tonsDeCinza(imageData.data);
+    context.putImageData(imageData, 0, 0);
+}
+
+function binarizacao() {
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    binar(imageData.data);
+    context.putImageData(imageData, 0, 0);
+}
+
+function mediana() {
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    filtroMediana(imageData.data);
+    context.putImageData(imageData, 0, 0);
+}
+
+function laPlaciano() {
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    laplace(imageData.data);
+    context.putImageData(imageData, 0, 0);
+}
+
+async function filtroMediana(data) {
+    let width = canvas.width; // largura
+    let height = canvas.height; // altura
+    let image = document.getElementById('obj_image1');
+    let inicio = performance.now();
+    for (let c = 0; c < height; c++) {
+        for (let l = 0; l < width; l++) {
+            let r = data[((width * c) + l) * 4];
+            let g = data[((width * c) + l) * 4+1];
+            let b = data[((width * c) + l) * 4+2];
+
+            let vetr = [
+                data[((width * c-1) + l-1) * 4], data[((width * c) + l-1) * 4], data[((width * c+1) + l-1) * 4],
+                data[((width * c-1) + l) * 4], data[((width * c) + l) * 4], data[((width * c+1) + l) * 4],
+                data[((width * c-1) + l+1) * 4], data[((width * c) + l+1) * 4], data[((width * c+1) + l+1) * 4]
+            ];
+
+            let vetg = [
+                data[((width * c-1) + l-1) * 4+1], data[((width * c) + l-1) * 4+1], data[((width * c+1) + l-1) * 4+1],
+                data[((width * c-1) + l) * 4+1], data[((width * c) + l) * 4+1], data[((width * c+1) + l) * 4+1],
+                data[((width * c-1) + l+1) * 4+1], data[((width * c) + l+1) * 4+1], data[((width * c+1) + l+1) * 4+1]
+            ];
+
+            let vetb = [
+                data[((width * c-1) + l-1) * 4+2], data[((width * c) + l-1) * 4+2], data[((width * c+1) + l-1) * 4+2],
+                data[((width * c-1) + l) * 4+2], data[((width * c) + l) * 4+2], data[((width * c+1) + l) * 4+2],
+                data[((width * c-1) + l+1) * 4+2], data[((width * c) + l+1) * 4+2], data[((width * c+1) + l+1) * 4+2] 
+            ];
+            
+            vetr.sort(function(a, b){
+                return b - a;
+            });
+
+            vetg.sort(function(a, b){
+                return b - a;
+            });
+
+            vetb.sort(function(a, b){
+                return b - a;
+            });
+
+            data[((width * c) + l) * 4] = vetr[4];
+            data[((width * c) + l) * 4+1] = vetg[4];
+            data[((width * c) + l) * 4+2] = vetb[4];
+        }
+    }
+    let fim = performance.now();
+    $('#exec_time').text((fim - inicio)/100 + ' segundos');
+}
+
+async function laplace(data) {
+    var val1 = $("#in1").val();
+    var val2 = $("#in2").val();
+    var val3 = $("#in3").val();
+    var val4 = $("#in4").val();
+    var val5 = $("#in5").val();
+    var val6 = $("#in6").val();
+    var val7 = $("#in7").val();
+    var val8 = $("#in8").val();
+    var val9 = $("#in9").val();
+    let width = canvas.width; // largura
+    let height = canvas.height; // altura
+    let image = document.getElementById('obj_image1');
+    let inicio = performance.now();
+    for (let c = 0; c < height; c++) {
+        for (let l = 0; l < width; l++) {
+            let r = data[((width * c) + l) * 4];
+            let g = data[((width * c) + l) * 4+1];
+            let b = data[((width * c) + l) * 4+2];
+
+            let somar = (
+                (data[((width * c-1) + l-1) * 4] * val1) + (data[((width * c) + l-1) * 4] * val2) + (data[((width * c+1) + l-1) * 4] * val3) +
+                (data[((width * c-1) + l) * 4] * val4) + (data[((width * c) + l) * 4] * val5) + (data[((width * c+1) + l) * 4] * val6) +
+                (data[((width * c-1) + l+1) * 4] * val7) + (data[((width * c) + l+1) * 4] * val8) + (data[((width * c+1) + l+1) * 4] * val9) 
+            );
+
+            let somag = (
+                (data[((width * c-1) + l-1) * 4+1] * val1) + (data[((width * c) + l-1) * 4+1] * val2) + (data[((width * c+1) + l-1) * 4+1] * val3) +
+                (data[((width * c-1) + l) * 4+1] * val4) + (data[((width * c) + l) * 4+1] * val5) + (data[((width * c+1) + l) * 4+1] * val6) +
+                (data[((width * c-1) + l+1) * 4+1] * val7) + (data[((width * c) + l+1) * 4+1] * val8) + (data[((width * c+1) + l+1) * 4+1] * val9) 
+            );
+
+            let somab = (
+                (data[((width * c-1) + l-1) * 4+2] * val1) + (data[((width * c) + l-1) * 4+2] * val2) + (data[((width * c+1) + l-1) * 4+2] * val3) +
+                (data[((width * c-1) + l) * 4+2] * val4) + (data[((width * c) + l) * 4+2] * val5) + (data[((width * c+1) + l) * 4+2] * val6) +
+                (data[((width * c-1) + l+1) * 4+2] * val7) + (data[((width * c) + l+1) * 4+2] * val8) + (data[((width * c+1) + l+1) * 4+2] * val9) 
+            );
+            
+            let mediar = Math.trunc(somar/9);
+            let mediag = Math.trunc(somag/9);
+            let mediab = Math.trunc(somab/9);
+
+            data[((width * c) + l) * 4] = mediar;
+            data[((width * c) + l) * 4+1] = mediag;
+            data[((width * c) + l) * 4+2] = mediab;
+        }
+    }
+    let fim = performance.now();
+    $('#exec_time').text((fim - inicio)/100 + ' segundos');
+}
+
+async function quantizar(data) {
+    var val = $("#value_bin").val();
+    let width = canvas.width; // largura
+    let height = canvas.height; // altura
+    let image = document.getElementById('obj_image1');
+    let inicio = performance.now();
+    for (let c = 0; c < height; c++) {
+        for (let l = 0; l < width; l++) {
+            let r = data[((width * c) + l) * 4];
+            let g = data[((width * c) + l) * 4+1];
+            let b = data[((width * c) + l) * 4+2];
+
+            let div = 256/val;
+
+            let new_data_r = data[((width * c) + l) * 4]%div;
+            let new_data_g = data[((width * c) + l) * 4+1]%div;
+            let new_data_b = data[((width * c) + l) * 4+2]%div;
+
+            new_data_r = div-new_data_r-1;
+            new_data_g = div-new_data_g-1;
+            new_data_b = div-new_data_b-1;
+
+            data[((width * c) + l) * 4] += new_data_r;
+            data[((width * c) + l) * 4+1] += new_data_g;
+            data[((width * c) + l) * 4+2] += new_data_b;
+        }
+    }
+    let fim = performance.now();
+    $('#exec_time').text((fim - inicio)/100 + ' segundos');
+}
+
+async function tonsDeCinza(data) {
+    let inicio = performance.now()
+    for (var i = 0; i < data.length; i+= 4) {
+        data[i] = data[i+2];
+        data[i+1] = data[i];
+        data[i+2] = data[i+1];
+    }
+    let fim = performance.now();
+    $('#exec_time').text((fim - inicio)/100 + ' segundos');
+}
+
+function filtroNegativa(data) {
+    var val = $("#value_bin").val();
+    let inicio = performance.now();
+    for (var i = 0; i < data.length; i+= 4) {
+        data[i] = -1*(data[i]-255);
+        data[i+1] = -1*(data[i+1]-255);
+        data[i+2] = -1*(data[i+2]-255);
+    }
+    let fim = performance.now();
+    $('#exec_time').text((fim - inicio)/100 + ' segundos');
+}
+
+function binar(data) {
+    var val = $("#value_bin").val();
+    let inicio = performance.now();
+    for (var i = 0; i < data.length; i+= 4) {
+        if(data[i] <= val){
+            data[i] = 0;
+        } else {
+            data[i] = 255
+        }
+        if(data[i+1] <= val){
+            data[i+1] = 0;
+        } else {
+            data[i+1] = 255
+        }
+        if(data[i+2] <= val){
+            data[i+2] = 0;
+        } else {
+            data[i+2] = 255
+        }
+    }
+    let fim = performance.now();
+    $('#exec_time').text((fim - inicio)/100 + ' segundos');
+}
+
+async function media(data) {
+    var val = $("#value_bin").val();
+    let width = canvas.width; // largura
+    let height = canvas.height; // altura
+    let image = document.getElementById('obj_image1');
+    let inicio = performance.now();
+    for (let c = 0; c < height; c++) {
+        for (let l = 0; l < width; l++) {
+            let r = data[((width * c) + l) * 4];
+            let g = data[((width * c) + l) * 4+1];
+            let b = data[((width * c) + l) * 4+2];
+
+            let p = 1;
+
+            let somar = (
+                (data[((width * c-1) + l-1) * 4] * p) + (data[((width * c) + l-1) * 4] * p) + (data[((width * c+1) + l-1) * 4] * p) +
+                (data[((width * c-1) + l) * 4] * p) + (data[((width * c) + l) * 4] * p) + (data[((width * c+1) + l) * 4] * p) +
+                (data[((width * c-1) + l+1) * 4] * p) + (data[((width * c) + l+1) * 4] * p) + (data[((width * c+1) + l+1) * 4] * p) 
+            );
+
+            let somag = (
+                (data[((width * c-1) + l-1) * 4+1] * p) + (data[((width * c) + l-1) * 4+1] * p) + (data[((width * c+1) + l-1) * 4+1] * p) +
+                (data[((width * c-1) + l) * 4+1] * p) + (data[((width * c) + l) * 4+1] * p) + (data[((width * c+1) + l) * 4+1] * p) +
+                (data[((width * c-1) + l+1) * 4+1] * p) + (data[((width * c) + l+1) * 4+1] * p) + (data[((width * c+1) + l+1) * 4+1] * p) 
+            );
+
+            let somab = (
+                (data[((width * c-1) + l-1) * 4+2] * p) + (data[((width * c) + l-1) * 4+2] * p) + (data[((width * c+1) + l-1) * 4+2] * p) +
+                (data[((width * c-1) + l) * 4+2] * p) + (data[((width * c) + l) * 4+2] * p) + (data[((width * c+1) + l) * 4+2] * p) +
+                (data[((width * c-1) + l+1) * 4+2] * p) + (data[((width * c) + l+1) * 4+2] * p) + (data[((width * c+1) + l+1) * 4+2] * p) 
+            );
+            
+            let mediar = Math.trunc(somar/9);
+            let mediag = Math.trunc(somag/9);
+            let mediab = Math.trunc(somab/9);
+
+            data[((width * c) + l) * 4] = mediar;
+            data[((width * c) + l) * 4+1] = mediag;
+            data[((width * c) + l) * 4+2] = mediab;
+        }
+    }
+    let fim = performance.now();
+    $('#exec_time').text((fim - inicio)/100 + ' segundos');
+}
+window.addEventListener('load', init);
+</script>
